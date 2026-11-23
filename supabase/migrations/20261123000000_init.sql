@@ -184,6 +184,14 @@ create policy "users delete own schedule"
   to authenticated
   using ((select auth.uid()) = user_id);
 
+-- Newer Supabase projects do not grant table access to the API roles by
+-- default. Signed-in members need these grants; RLS above still limits
+-- every write to the member's own rows.
+grant usage on schema public to authenticated;
+grant select on public.departments to authenticated;
+grant select, insert, update, delete on public.profiles to authenticated;
+grant select, insert, update, delete on public.weekly_schedules to authenticated;
+
 -- Visitors who are not signed in get no table access at all.
 revoke all on public.departments from anon;
 revoke all on public.profiles from anon;
