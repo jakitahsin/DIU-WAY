@@ -14,6 +14,18 @@ function isPublic(pathname: string) {
  * signed-out visitors to /login for member-only pages.
  */
 export async function updateSession(request: NextRequest) {
+  // Supabase falls back to the Site URL (e.g. "/?code=...") when a redirect
+  // URL isn't allow-listed. Send any such auth link to the callback handler.
+  const { pathname: path, searchParams } = request.nextUrl;
+  if (
+    path !== "/auth/callback" &&
+    (searchParams.has("code") || searchParams.has("token_hash") || searchParams.has("error_description"))
+  ) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/auth/callback";
+    return NextResponse.redirect(url);
+  }
+
   let response = NextResponse.next({ request });
   const env = getSupabaseEnv();
   if (!env) return response; // Setup screen is shown by the app.

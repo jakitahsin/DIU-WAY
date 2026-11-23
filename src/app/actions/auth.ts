@@ -24,7 +24,8 @@ function authError(message: string) {
   if (/invalid login/i.test(message)) return "Wrong email or password.";
   if (/email not confirmed/i.test(message)) return "Please confirm your email first — check your inbox.";
   if (/already registered/i.test(message)) return "That email already has an account. Sign in instead.";
-  if (/rate limit/i.test(message)) return "Too many attempts. Please wait a minute and try again.";
+  if (/rate limit|security purposes/i.test(message))
+    return "Too many emails sent. Supabase's free mailer allows only a few per hour — please wait and try again.";
   return message;
 }
 
@@ -64,16 +65,44 @@ export async function signUpWithPassword(email: string, password: string): Promi
   const { data, error } = await supabase.auth.signUp({
     email: e.data,
     password: p.data,
-    options: { emailRedirectTo: `${await siteOrigin()}/auth/callback?next=/my-schedule?welcome=1` },
+    options: { emailRedirectTo: `${await siteOrigin()}/auth/callback` },
   });
   if (error) return { ok: false, error: authError(error.message) };
+
+  // Supabase hides existing accounts: it "succeeds" but sends no email and
+  // returns a user with no identities. Tell the person to sign in instead.
+  if (data.user && (data.user.identities?.length ?? 0) === 0) {
+    return {
+      ok: false,
+      error:
+        "This email is already registered. Sign in with your password, or use “Magic link” if you forgot it.",
+    };
+  }
 
   // Email confirmation disabled in Supabase -> session exists right away.
   if (data.session) {
     revalidatePath("/", "layout");
     redirect("/my-schedule?welcome=1");
   }
-  return { ok: true, message: "Check your inbox to confirm your email, then you're in." };
+  return {
+    ok: true,
+    message: "We sent a confirmation link. Open it, then sign in. Check Spam/Promotions if it's not in your inbox.",
+  };
+}
+
+/** Re-send the sign-up confirmation email (Supabase limits how often). */
+export async function resendConfirmation(email: string): Promise<ActionResult> {
+  const e = emailSchema.safeParse(email);
+  if (!e.success) return { ok: false, error: e.error.issues[0].message };
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resend({
+    type: "signup",
+    email: e.data,
+    options: { emailRedirectTo: `${await siteOrigin()}/auth/callback` },
+  });
+  if (error) return { ok: false, error: authError(error.message) };
+  return { ok: true, message: "Sent again. It can take a minute — check Spam too." };
 }
 
 export async function sendMagicLink(email: string, next?: string): Promise<ActionResult> {

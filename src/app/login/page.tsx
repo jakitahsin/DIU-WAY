@@ -42,7 +42,9 @@ export default async function LoginPage({
         <p className="mt-2 text-muted">Sign in or create an account with your email.</p>
         {linkError && (
           <p className="mt-4 rounded-2xl bg-[#fdecea] px-4 py-3 text-sm font-medium text-[#a93226]" role="alert">
-            That sign-in link is invalid or expired. Please request a new one.
+            That link couldn&apos;t sign you in here (it may be used already, expired, or opened in a
+            different browser). If it was a confirmation email, your email is most likely confirmed
+            now — just sign in with your password below.
           </p>
         )}
         <LoginForm next={next} />

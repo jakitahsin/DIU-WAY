@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Eye, EyeOff, KeyRound, Mail, MailCheck, Wand2 } from "lucide-react";
-import { sendMagicLink, signInWithPassword, signUpWithPassword } from "@/app/actions/auth";
+import { resendConfirmation, sendMagicLink, signInWithPassword, signUpWithPassword } from "@/app/actions/auth";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
 
@@ -22,7 +22,19 @@ export function LoginForm({ next }: { next?: string }) {
   const [show, setShow] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState<string | null>(null);
+  const [sentKind, setSentKind] = useState<Mode>("signin");
   const [pending, start] = useTransition();
+  const [resending, startResend] = useTransition();
+
+  function resend() {
+    startResend(async () => {
+      const r = await resendConfirmation(email);
+      if (r.ok) toast.success(r.message ?? "Sent again");
+      else toast.error("Couldn't resend", { description: r.error });
+    });
+  }
+
+  const needsConfirm = Boolean(error && /confirm your email/i.test(error));
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -37,6 +49,7 @@ export function LoginForm({ next }: { next?: string }) {
       // A successful sign-in redirects on the server and never returns here.
       if (!result) return;
       if (result.ok) {
+        setSentKind(mode);
         setSent(result.message ?? "Check your inbox.");
         toast.success(result.message ?? "Done");
       } else {
@@ -54,9 +67,22 @@ export function LoginForm({ next }: { next?: string }) {
         <h2 className="mt-4 font-display text-2xl font-bold">Check your email</h2>
         <p className="mt-2 text-muted">{sent}</p>
         <p className="mt-1 text-sm text-muted">Sent to <strong className="text-ink">{email}</strong></p>
-        <Button variant="ghost" className="mt-6" onClick={() => setSent(null)}>
-          Use a different email
-        </Button>
+        <div className="mt-6 flex flex-col items-center gap-2">
+          {sentKind === "signup" && (
+            <Button variant="secondary" onClick={resend} loading={resending}>
+              Resend confirmation email
+            </Button>
+          )}
+          <Button
+            variant="ghost"
+            onClick={() => {
+              setSent(null);
+              setMode("signin");
+            }}
+          >
+            I&apos;ve confirmed — sign in
+          </Button>
+        </div>
       </div>
     );
   }
@@ -144,6 +170,11 @@ export function LoginForm({ next }: { next?: string }) {
       {error && (
         <p className="rounded-2xl bg-[#fdecea] px-4 py-3 text-sm font-medium text-[#a93226]" role="alert">
           {error}
+          {needsConfirm && (
+            <button type="button" onClick={resend} disabled={resending} className="mt-2 block font-semibold underline">
+              {resending ? "Sending…" : "Resend confirmation email"}
+            </button>
+          )}
         </p>
       )}
 
