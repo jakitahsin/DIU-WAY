@@ -1,26 +1,165 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ------------------------------------------------------------------ */
+/* Design tokens — DIU WAY                                            */
+/* ------------------------------------------------------------------ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #f7f9f6;
+  --surface: #ffffff;
+  --surface-2: #f0f4ef;
+  --ink: #10243a;
+  --ink-soft: #2b4058;
+  --muted: #5d6f80;
+  --line: #e3e8e6;
+  --brand: #147d50;
+  --brand-strong: #0f6440;
+  --brand-soft: #e3f3ea;
+  --lime: #c9f56a;
+  --lime-soft: #f1fcd9;
+  --navy: #10243a;
+
+  --going-bg: #e6f6dc;
+  --going-fg: #1d5a2f;
+  --going-dot: #3fa34d;
+  --return-bg: #fff0e1;
+  --return-fg: #8a4513;
+  --return-dot: #f08a3c;
+
+  --ring: #147d50;
+  --shadow-card: 0 1px 2px rgb(16 36 58 / 0.04), 0 8px 24px -12px rgb(16 36 58 / 0.12);
+  --shadow-lift: 0 2px 4px rgb(16 36 58 / 0.05), 0 18px 40px -18px rgb(16 36 58 / 0.28);
+}
+
+.dark {
+  --bg: #0a1624;
+  --surface: #112235;
+  --surface-2: #0e1d2e;
+  --ink: #eaf1ee;
+  --ink-soft: #c5d3d0;
+  --muted: #8fa2b2;
+  --line: #1f344a;
+  --brand: #34c07f;
+  --brand-strong: #5fd69c;
+  --brand-soft: #123528;
+  --lime: #c9f56a;
+  --lime-soft: #1f2f12;
+  --navy: #10243a;
+
+  --going-bg: #15331f;
+  --going-fg: #a9ecb4;
+  --going-dot: #5fd06d;
+  --return-bg: #3a2415;
+  --return-fg: #ffc796;
+  --return-dot: #ff9d52;
+
+  --ring: #5fd69c;
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px -12px rgb(0 0 0 / 0.5);
+  --shadow-lift: 0 2px 4px rgb(0 0 0 / 0.3), 0 18px 40px -18px rgb(0 0 0 / 0.7);
+  color-scheme: dark;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-soft: var(--brand-soft);
+  --color-lime: var(--lime);
+  --color-lime-soft: var(--lime-soft);
+  --color-navy: var(--navy);
+  --color-going-bg: var(--going-bg);
+  --color-going-fg: var(--going-fg);
+  --color-going-dot: var(--going-dot);
+  --color-return-bg: var(--return-bg);
+  --color-return-fg: var(--return-fg);
+  --color-return-dot: var(--return-dot);
+
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-bricolage), var(--font-jakarta), ui-sans-serif, sans-serif;
+
+  --shadow-card: var(--shadow-card);
+  --shadow-lift: var(--shadow-lift);
+
+  --animate-rise: rise 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  --animate-fade: fade 0.4s ease-out both;
+  --animate-float: float 6s ease-in-out infinite;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+@keyframes rise {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+@keyframes road {
+  from { background-position: 0 0; }
+  to { background-position: 48px 0; }
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--lime);
+  color: #10243a;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: 10px;
+}
+
+/* Subtle dotted texture used behind sections */
+.bg-dots {
+  background-image: radial-gradient(color-mix(in oklab, var(--ink) 9%, transparent) 1px, transparent 1px);
+  background-size: 18px 18px;
+}
+
+/* Animated dashed "road" line */
+.road-line {
+  background-image: linear-gradient(90deg, var(--lime) 50%, transparent 50%);
+  background-size: 24px 3px;
+  background-repeat: repeat-x;
+  animation: road 1.6s linear infinite;
+}
+
+/* View transitions between pages (supported browsers only) */
+@view-transition {
+  navigation: auto;
+}
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 180ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
